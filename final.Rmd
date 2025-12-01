@@ -54,7 +54,11 @@ tobacco <- tobacco_chr |>
 ```
 
 ```{r}
+n_distinct(tobacco$`Tobacco Use`)
 
+# The "tobacco use" column is useless since it only says "Cigarette Use Among Adults". Therefore let's get rid of it.
+tobacco <- tobacco |>
+  select(-`Tobacco Use`)
 ```
 
 
