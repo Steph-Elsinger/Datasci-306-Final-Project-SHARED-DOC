@@ -62,15 +62,56 @@ tobacco <- tobacco |>
 ```
 
 ```{r}
-tobacco |>
-  group_by(`Year`, `State`, `Demographic`, `Comparing (Focus group)`, `Cigarette Use Prevalence % (Focus group)`) |>
+tobacco <- tobacco |>
+  group_by(`Year`,
+           `State`,
+           `Demographic`,
+           `Comparing (Focus group)`,
+           `Cigarette Use Prevalence % (Focus group)`)|>
   mutate(`Mean Disparity Value (Focus Group)` = mean(`Disparity Value`))
+
+# Creating a new column which assigns each state to a designated region based on the Census Regions and Divisions of the United States.
+
+tobacco_region <- tobacco |>
+  mutate(
+    region = case_when(
+      State %in% c(
+        "Maine","New Hampshire","Vermont","Massachusetts","Rhode Island","Connecticut",
+        "New York","New Jersey","Pennsylvania"
+      ) ~ "Northeast",
+      
+      State %in% c(
+        "Ohio","Indiana","Illinois","Michigan","Wisconsin",
+        "Minnesota","Iowa","Missouri","North Dakota","South Dakota","Nebraska","Kansas"
+      ) ~ "Midwest",
+      
+      State %in% c(
+        "Delaware","Maryland","District of Columbia","Virginia","West Virginia",
+        "North Carolina","South Carolina","Georgia","Florida",
+        "Kentucky","Tennessee","Mississippi","Alabama",
+        "Oklahoma","Texas","Arkansas","Louisiana"
+      ) ~ "South",
+      
+      State %in% c(
+        "Idaho","Montana","Wyoming","Nevada","Utah","Colorado","Arizona","New Mexico",
+        "Alaska","Washington","Oregon","California","Hawaii"
+      ) ~ "West",))
+
+tobacco_region
+
+#To check for NA values.
+tobacco_region |>
+  filter(is.na(region))
 ```
 
 
 ### 2. Requirement - 2 (20 pt)
 
 You need to plot 10 different diagrams to show correlations, frequencies, and/or relationships between various variables with plots of 5 different types (bar, line, heatmap, facet, etc.). Every plot should have a title and the x/y axis should have legible labels without any label overlaps for full credit. Provide a summary of your interpretations from the plots after each one. Each chart should be meaningful by itself.
+```{r}
+
+
+```
 
 ### 3. Requirement - 3 (5 pt)
 
