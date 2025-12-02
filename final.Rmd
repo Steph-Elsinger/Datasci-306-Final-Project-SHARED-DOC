@@ -62,7 +62,9 @@ tobacco <- tobacco |>
 ```
 
 ```{r}
-hello
+tobacco |>
+  group_by(`Year`, `State`, `Demographic`, `Comparing (Focus group)`, `Cigarette Use Prevalence % (Focus group)`) |>
+  mutate(`Mean Disparity Value (Focus Group)` = mean(`Disparity Value`))
 ```
 
 
