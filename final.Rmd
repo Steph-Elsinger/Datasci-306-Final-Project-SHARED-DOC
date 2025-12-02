@@ -61,6 +61,10 @@ tobacco <- tobacco |>
   select(-`Tobacco Use`)
 ```
 
+```{r}
+hello
+```
+
 
 ### 2. Requirement - 2 (20 pt)
 
