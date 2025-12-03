@@ -110,8 +110,41 @@ tobacco_region |>
 You need to plot 10 different diagrams to show correlations, frequencies, and/or relationships between various variables with plots of 5 different types (bar, line, heatmap, facet, etc.). Every plot should have a title and the x/y axis should have legible labels without any label overlaps for full credit. Provide a summary of your interpretations from the plots after each one. Each chart should be meaningful by itself.
 ```{r}
 
+tobacco_region |>
+  filter(Year == 2022, Demographic == "Race and Ethnicity") |>
+ 
+  group_by(Race = `Comparing (Focus group)`, region) |>
+  summarize(race_mean = mean(`Cigarette Use Prevalence % (Focus group)`, na.rm = TRUE)) |>
+ 
+  ggplot(aes(x = region, y = race_mean, fill = Race)) + geom_col(position = "dodge") +
+  labs(title = "Average US Adult Smoking Rates by Race and Region in 2023",
+       x = "Region", y = "Average Smoking Rate (%)", fill = "Race")
 
 ```
+
+```{r}
+
+tobacco_region |>
+  ungroup() |>
+  filter(Year == 2023) |>
+  select(`Demographic`,
+         `region`,
+         `Comparing (Focus group)`,
+         `To (Reference group)`,
+         `Disparity Value`) |>
+  drop_na() |>
+  slice_max(`Disparity Value`, n = 100) |>
+  
+  ggplot(aes(x = "", fill = Demographic)) +
+  geom_bar(width = 1) +
+  coord_polar(theta = "y") +
+  labs(title = "Share of Top 100 Smoking Disparity Values by Demographic in 2023",
+       x = NULL, y = NULL,
+       fill = "Demographic") +
+       theme_void()
+
+```
+
 
 ### 3. Requirement - 3 (5 pt)
 
