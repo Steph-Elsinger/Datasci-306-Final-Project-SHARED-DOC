@@ -145,6 +145,17 @@ tobacco_region |>
 
 ```
 
+```{r}
+tobacco_region |> group_by(`Year`, region) |> 
+  summarize(avg = mean(`Cigarette Use Prevalence % (Reference group)`, na.rm = T)) |>
+  
+  ggplot() + geom_line(aes(x = `Year`, 
+                           y = avg, color = region)) +
+    labs(title = "Average Smoking Rate by Reference Group's Region",
+         y = "Average Cigarette Smoking Rate (as a %)",
+         color = "Region")
+```
+
 
 ### 3. Requirement - 3 (5 pt)
 
