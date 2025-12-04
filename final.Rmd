@@ -167,9 +167,7 @@ tobacco_region |> filter(`Demographic` == "Income") |> group_by(`Comparing (Focu
          fill = "Income")
 ```
 ```{r}
-
-
-# --- Step 1: Convert to numeric ---
+# Step 1: Convert to numeric (already done above)
 m_health_numeric <- m_health %>%
   mutate(across(c(`Cigarette Use Prevalence % (Focus group)`,
                   `Cigarette Use Prevalence % (Reference group)`,
@@ -182,7 +180,7 @@ income_numeric <- income %>%
                   `Disparity Value`),
                 as.numeric))
 
-# --- Step 2: Clean columns for merging ---
+# Step 2: Keep key columns
 m_health_clean <- m_health_numeric %>%
   select(State, Year,
          MentalHealth = `Comparing (Focus group)`,
@@ -193,31 +191,62 @@ income_clean <- income_numeric %>%
          Income = `Comparing (Focus group)`,
          Income_Smoking = `Cigarette Use Prevalence % (Focus group)`)
 
-# --- Step 3: Merge income + mental health by state and year ---
+# Step 3: Merge CONDITIONALLY with many-to-many allowed
 merged <- income_clean %>%
-  inner_join(m_health_clean, by = c("State", "Year"))
+  inner_join(m_health_clean,
+             by = c("State", "Year"),
+             relationship = "many-to-many")
 
-# --- Step 4: Compute the COMBINED average smoking prevalence ---
+# Step 4: Calculate avg smoking for each Income × MentalHealth pair
 plot_df <- merged %>%
-  mutate(CombinedSmoking = (Income_Smoking + MH_Smoking) / 2) %>%   # <--- KEY FIX
   group_by(Income, MentalHealth) %>%
-  summarize(avg_combined = mean(CombinedSmoking, na.rm = TRUE),
-            .groups = "drop")
+  summarize(
+    Avg_Smoking = mean(c(Income_Smoking, MH_Smoking), na.rm = TRUE),
+    .groups = "drop"
+  )
 
-# --- Step 5: Stacked bar chart ---
+# Step 5: Plot one bar per pair
 ggplot(plot_df,
-       aes(x = Income,
-           y = avg_combined,
-           fill = MentalHealth)) +
-  geom_col(position = "dodge") +
+       aes(x = interaction(Income, MentalHealth, sep = " | "),
+           y = Avg_Smoking,
+           fill = Income)) +
+  geom_col() +
   labs(
-    title = "Combined Smoking Prevalence by Income (Stacked by Mental Health Category)",
-    x = "Income Bracket (Focus Group)",
-    y = "Avg Combined Cigarette Smoking Prevalence (%)",
-    fill = "Mental Health (Focus Group)"
+    title = "Average Smoking Percent for Each Income × Mental Health Pair",
+    x = "Income Group | Mental Health Group",
+    y = "Average Smoking Percent (%)",
+    fill = "Income Bracket"
   ) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+```{r}
+# Convert smoking prevalence to numeric (as in your PDF)
+m_health_numeric <- m_health %>%
+  mutate(
+    `Cigarette Use Prevalence % (Focus group)` =
+      as.numeric(`Cigarette Use Prevalence % (Focus group)`)
+  )
+
+# Create scatterplot
+ggplot(
+  m_health_numeric,
+  aes(
+    x = Year,
+    y = `Cigarette Use Prevalence % (Focus group)`,
+    color = `Comparing (Focus group)`  # mental health category
+  )
+) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(se = FALSE) +   # optional trend lines
+  labs(
+    title = "Smoking Prevalence Over Time by Mental Health Group",
+    x = "Year",
+    y = "Smoking Prevalence (%), Focus Group",
+    color = "Mental Health Group"
+  ) +
+  theme_minimal()
 ```
 
 
