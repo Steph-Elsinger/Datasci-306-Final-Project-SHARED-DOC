@@ -117,7 +117,7 @@ tobacco_region |>
   summarize(race_mean = mean(`Cigarette Use Prevalence % (Focus group)`, na.rm = TRUE)) |>
  
   ggplot(aes(x = region, y = race_mean, fill = Race)) + geom_col(position = "dodge") +
-  labs(title = "Average US Adult Smoking Rates by Race and Region in 2023",
+  labs(title = "Average US Adult Smoking Rates by Race and Region in 2022",
        x = "Region", y = "Average Smoking Rate (%)", fill = "Race")
 
 ```
@@ -126,23 +126,23 @@ tobacco_region |>
 
 tobacco_region |>
   ungroup() |>
-  filter(Year == 2023) |>
-  select(`Demographic`,
-         `region`,
-         `Comparing (Focus group)`,
-         `To (Reference group)`,
-         `Disparity Value`) |>
-  drop_na() |>
-  slice_max(`Disparity Value`, n = 100) |>
-  
-  ggplot(aes(x = "", fill = Demographic)) +
+  filter(Year %in% c(2011, 2023)) |>
+  select(Year, `Comparing (Focus group)`, `Disparity Value`) |>
+  drop_na(`Disparity Value`) |>
+  group_by(Year) |>
+  slice_max(`Disparity Value`, n = 100, with_ties = F) |>
+  add_count(`Comparing (Focus group)`, name = "n_fg") |>
+  mutate(FocusGroup2 = ifelse(n_fg <= 3,
+                              "Other",
+                              `Comparing (Focus group)`)) |>
+  ggplot(aes(x = "", fill = FocusGroup2)) +
   geom_bar(width = 1) +
   coord_polar(theta = "y") +
-  labs(title = "Share of Top 100 Smoking Disparity Values by Demographic in 2023",
-       x = NULL, y = NULL,
-       fill = "Demographic") +
-       theme_void()
-
+  facet_wrap(~ Year) +
+  labs(title = "Share of Top 100 Smoking Disparity Values by Factor (2010 vs 2023)",
+      x = NULL, y = NULL,
+      fill = "Factor") +
+  theme_void()
 ```
 
 ```{r}
