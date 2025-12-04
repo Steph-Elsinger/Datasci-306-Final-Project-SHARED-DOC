@@ -155,6 +155,7 @@ tobacco_region |> group_by(`Year`, region) |>
          y = "Average Cigarette Smoking Rate (as a %)",
          color = "Region")
 ```
+
 ```{r}
 tobacco_region |> filter(`Demographic` == "Income") |> group_by(`Comparing (Focus group)`, `region`) |>
   summarize(avg = mean(`Cigarette Use Prevalence % (Reference group)`, na.rm = T)) |>
