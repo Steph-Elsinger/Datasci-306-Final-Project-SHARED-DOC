@@ -1,6 +1,6 @@
 ---
 title: "DATASCI 306, Fall 2025, Final Group Project"
-author: "Group <num>: mention your group names here"
+author: "Group <num>: Andre Couwlier, Stephen Elsinger, Maximus Lo Bianco, Talia Parnes, Lucia Zhang"
 output:
   pdf_document: default
 ---
@@ -139,7 +139,7 @@ tobacco_region |>
   geom_bar(width = 1) +
   coord_polar(theta = "y") +
   facet_wrap(~ Year) +
-  labs(title = "Share of Top 100 Smoking Disparity Values by Factor (2010 vs 2023)",
+  labs(title = "Share of Top 100 Smoking Disparity Values by Factor (2011 vs 2023)",
       x = NULL, y = NULL,
       fill = "Factor") +
   theme_void()
