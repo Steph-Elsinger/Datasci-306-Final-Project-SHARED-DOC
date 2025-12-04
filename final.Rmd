@@ -145,6 +145,28 @@ tobacco_region |>
   theme_void()
 ```
 
+```{r}
+tobacco_region |> group_by(`Year`, region) |> 
+  summarize(avg = mean(`Cigarette Use Prevalence % (Focus group)`, na.rm = T)) |>
+  
+  ggplot() + geom_line(aes(x = `Year`, 
+                           y = avg, color = region)) +
+    labs(title = "Average Smoking Rate Over Time by Focus Group's Region",
+         y = "Average Cigarette Smoking Rate (as a %)",
+         color = "Region")
+```
+
+```{r}
+tobacco_region |> filter(`Demographic` == "Income") |> group_by(`Comparing (Focus group)`, `region`) |>
+  summarize(avg = mean(`Cigarette Use Prevalence % (Reference group)`, na.rm = T)) |>
+  
+  ggplot(aes(fill = `Comparing (Focus group)`, y = avg, x = region)) + geom_col(position = "dodge") +
+    labs(title = "Average Smoking Rate by Focus Group's Income and Region",
+         x = "Region",
+         y = "Average Cigarette Smoking Rate (as a %)",
+         fill = "Income")
+```
+
 
 ### 3. Requirement - 3 (5 pt)
 
