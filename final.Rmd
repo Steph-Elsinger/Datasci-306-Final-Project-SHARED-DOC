@@ -158,13 +158,66 @@ tobacco_region |> group_by(`Year`, region) |>
 
 ```{r}
 tobacco_region |> filter(`Demographic` == "Income") |> group_by(`Comparing (Focus group)`, `region`) |>
-  summarize(avg = mean(`Cigarette Use Prevalence % (Reference group)`, na.rm = T)) |>
+  summarize(avg = mean(`Cigarette Use Prevalence % (Focus group)`, na.rm = T)) |>
   
   ggplot(aes(fill = `Comparing (Focus group)`, y = avg, x = region)) + geom_col(position = "dodge") +
     labs(title = "Average Smoking Rate by Focus Group's Income and Region",
          x = "Region",
          y = "Average Cigarette Smoking Rate (as a %)",
          fill = "Income")
+```
+```{r}
+
+
+# --- Step 1: Convert to numeric ---
+m_health_numeric <- m_health %>%
+  mutate(across(c(`Cigarette Use Prevalence % (Focus group)`,
+                  `Cigarette Use Prevalence % (Reference group)`,
+                  `Disparity Value`),
+                as.numeric))
+
+income_numeric <- income %>%
+  mutate(across(c(`Cigarette Use Prevalence % (Focus group)`,
+                  `Cigarette Use Prevalence % (Reference group)`,
+                  `Disparity Value`),
+                as.numeric))
+
+# --- Step 2: Clean columns for merging ---
+m_health_clean <- m_health_numeric %>%
+  select(State, Year,
+         MentalHealth = `Comparing (Focus group)`,
+         MH_Smoking = `Cigarette Use Prevalence % (Focus group)`)
+
+income_clean <- income_numeric %>%
+  select(State, Year,
+         Income = `Comparing (Focus group)`,
+         Income_Smoking = `Cigarette Use Prevalence % (Focus group)`)
+
+# --- Step 3: Merge income + mental health by state and year ---
+merged <- income_clean %>%
+  inner_join(m_health_clean, by = c("State", "Year"))
+
+# --- Step 4: Compute the COMBINED average smoking prevalence ---
+plot_df <- merged %>%
+  mutate(CombinedSmoking = (Income_Smoking + MH_Smoking) / 2) %>%   # <--- KEY FIX
+  group_by(Income, MentalHealth) %>%
+  summarize(avg_combined = mean(CombinedSmoking, na.rm = TRUE),
+            .groups = "drop")
+
+# --- Step 5: Stacked bar chart ---
+ggplot(plot_df,
+       aes(x = Income,
+           y = avg_combined,
+           fill = MentalHealth)) +
+  geom_col(position = "dodge") +
+  labs(
+    title = "Combined Smoking Prevalence by Income (Stacked by Mental Health Category)",
+    x = "Income Bracket (Focus Group)",
+    y = "Avg Combined Cigarette Smoking Prevalence (%)",
+    fill = "Mental Health (Focus Group)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
 ```
 
 
