@@ -234,6 +234,21 @@ tobacco_region |>
   geom_col()
 ```
 
+```{r}
+tobacco_region |>
+  filter(Demographic == "Mental Health") |>
+  ggplot(aes(
+    x = `Comparing (Focus group)`,
+    y = `Cigarette Use Prevalence % (Focus group)`,
+    fill = `Comparing (Focus group)`
+  )) +
+  geom_boxplot() +
+  labs(
+    title = "Smoking Rates by Mental Health Status",
+    x = "Mental Health Category",
+    y = "Cigarette Use Prevalence (%)", fill = "Mental Health") +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+```
 
 
 ### 3. Requirement - 3 (5 pt)
