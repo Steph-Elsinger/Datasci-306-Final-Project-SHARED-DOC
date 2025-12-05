@@ -166,6 +166,34 @@ tobacco_region |> filter(`Demographic` == "Income") |> group_by(`Comparing (Focu
          y = "Average Cigarette Smoking Rate (as a %)",
          fill = "Income")
 ```
+```{r}
+#Convert smoking prevalence to numeric (as in your PDF)
+m_health_numeric <- m_health %>%
+  mutate(
+    `Cigarette Use Prevalence % (Focus group)` =
+      as.numeric(`Cigarette Use Prevalence % (Focus group)`)
+  )
+
+# Create scatterplot
+ggplot(
+  m_health_numeric,
+  aes(
+    x = Year,
+    y = `Cigarette Use Prevalence % (Focus group)`,
+    color = `Comparing (Focus group)`  # mental health category
+  )
+) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(se = FALSE) +   # optional trend lines
+  labs(
+    title = "Smoking Prevalence Over Time by Mental Health Group",
+    x = "Year",
+    y = "Smoking Prevalence (%), Focus Group",
+    color = "Mental Health Group"
+  ) +
+  theme_minimal()
+```
+
 
 ```{r}
 tobacco |>
