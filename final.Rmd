@@ -310,3 +310,360 @@ Your summary might answer questions like;
 * Which populations should be prioritized for smoking cessation programs? etc.  
 You may also include ideas for future analysis and any limitations you came across with the current dataset
 
+
+```{r}
+# app.R
+library(shiny)
+library(dplyr)
+
+# ---- Load data ----
+tobacco_region <-tobacco_region
+
+years  <- sort(unique(tobacco_region$Year))
+states <- sort(unique(tobacco_region$State))
+demos  <- unique(tobacco_region$Demographic)
+
+# ---- UI ----
+ui <- fluidPage(
+  titlePanel("Compare Cigarette Use Between Two Groups"),
+
+  sidebarLayout(
+    sidebarPanel(
+      h3("Group 1"),
+      selectInput("g1_year",  "Year:",   choices = years,  selected = max(years)),
+      selectInput("g1_state", "State:",  choices = states),
+      selectInput("g1_demo",  "Demographic:", choices = demos),
+      uiOutput("g1_focus_ui"),
+
+      tags$hr(),
+
+      h3("Group 2"),
+      selectInput("g2_year",  "Year:",   choices = years,  selected = max(years)),
+      selectInput("g2_state", "State:",  choices = states),
+      selectInput("g2_demo",  "Demographic:", choices = demos),
+      uiOutput("g2_focus_ui")
+    ),
+
+    mainPanel(
+      h3("Comparison results"),
+      textOutput("g1_text"),
+      textOutput("g2_text"),
+      br(),
+      
+      strong(textOutput("ratio_text")),   # NEW: Disparity ratio sentence
+      br(), br(),
+      
+      h3("Smoking Prevalence by Race and Ethnicity"),
+  plotOutput("race_boxplot"),
+  br(), br(),
+      
+      h4("Data used (state-level averages)"),
+      tableOutput("summary_table")
+    )
+  )
+)
+
+# ---- SERVER ----
+server <- function(input, output, session) {
+
+  # Helper: focus group options for a given state/year/demographic
+  focus_choices <- function(year, state, demo) {
+    tobacco_region %>%
+      filter(
+        Year == year,
+        State == state,
+        Demographic == demo
+      ) %>%
+      pull(`Comparing (Focus group)`) %>%
+      unique() %>%
+      sort()
+  }
+
+  # Dynamic dropdowns
+  output$g1_focus_ui <- renderUI({
+    choices <- focus_choices(input$g1_year, input$g1_state, input$g1_demo)
+    selectInput("g1_focus", "Group 1: Focus group", choices = choices)
+  })
+
+  output$g2_focus_ui <- renderUI({
+    choices <- focus_choices(input$g2_year, input$g2_state, input$g2_demo)
+    selectInput("g2_focus", "Group 2: Focus group", choices = choices)
+  })
+
+  # Helper: get prevalence 
+  get_prev <- function(year, state, demo, focus) {
+    df <- tobacco_region %>%
+      filter(
+        Year == year,
+        State == state,
+        Demographic == demo,
+        `Comparing (Focus group)` == focus
+      )
+
+    if (nrow(df) == 0) return(NA_real_)
+
+    mean(df$`Cigarette Use Prevalence % (Focus group)`, na.rm = TRUE)
+  }
+
+  # Reactive prevalences
+  g1_prev <- reactive({
+    req(input$g1_year, input$g1_state, input$g1_demo, input$g1_focus)
+    get_prev(input$g1_year, input$g1_state, input$g1_demo, input$g1_focus)
+  })
+
+  g2_prev <- reactive({
+    req(input$g2_year, input$g2_state, input$g2_demo, input$g2_focus)
+    get_prev(input$g2_year, input$g2_state, input$g2_demo, input$g2_focus)
+  })
+
+  # --- Display prevalence text ---
+  output$g1_text <- renderText({
+    p <- g1_prev()
+    if (is.na(p)) return("No data for Group 1.")
+    paste0(
+      "Group 1 (", input$g1_state, ", ", input$g1_year, ", ",
+      input$g1_demo, " = ", input$g1_focus,
+      ") has an estimated cigarette-use prevalence of ",
+      round(p, 1), "%."
+    )
+  })
+
+  output$g2_text <- renderText({
+    p <- g2_prev()
+    if (is.na(p)) return("No data for Group 2.")
+    paste0(
+      "Group 2 (", input$g2_state, ", ", input$g2_year, ", ",
+      input$g2_demo, " = ", input$g2_focus,
+      ") has an estimated cigarette-use prevalence of ",
+      round(p, 1), "%."
+    )
+  })
+
+  # --- DISPARITY RATIO (FG% / RG%) ---
+  output$ratio_text <- renderText({
+    p1 <- g1_prev()
+    p2 <- g2_prev()
+
+    if (is.na(p1) || is.na(p2) || p2 == 0) {
+      return("Cannot compute disparity ratio.")
+    }
+
+    ratio <- p1 / p2
+
+    # Interpretation text
+    if (ratio > 1) {
+      paste0(
+        "Group 1 is ", round(ratio, 2),
+        "× more likely to smoke than Group 2."
+      )
+    } else if (ratio < 1) {
+      paste0(
+        "Group 1 is ", round(1/ratio, 2),
+        "× less likely to smoke than Group 2."
+      )
+    } else {
+      "Both groups smoke at the same rate (ratio = 1.0)."
+    }
+  })
+
+  # --- Summary Table ---
+  output$summary_table <- renderTable({
+    data.frame(
+      Group = c("Group 1", "Group 2"),
+      Year  = c(input$g1_year, input$g2_year),
+      State = c(input$g1_state, input$g2_state),
+      Demographic = c(input$g1_demo, input$g2_demo),
+      FocusGroup  = c(input$g1_focus, input$g2_focus),
+      Prevalence_percent = c(g1_prev(), g2_prev())
+    )
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+
+```{r}
+library(shiny)
+library(dplyr)
+library(ggplot2)
+
+# ---- Data ----
+# Assumes tobacco_region is already in your environment.
+# If not, load it with read.csv(...) here.
+years  <- sort(unique(tobacco_region$Year))
+states <- sort(unique(tobacco_region$State))
+demos  <- unique(tobacco_region$Demographic)
+
+# ---- UI ----
+ui <- fluidPage(
+  titlePanel("Compare Cigarette Use Between Two Groups"),
+
+  sidebarLayout(
+    sidebarPanel(
+      h3("Group 1"),
+      selectInput("g1_year",  "Year:",   choices = years,  selected = max(years)),
+      selectInput("g1_state", "State:",  choices = states),
+      selectInput("g1_demo",  "Demographic:", choices = demos),
+      uiOutput("g1_focus_ui"),
+
+      tags$hr(),
+
+      h3("Group 2"),
+      selectInput("g2_year",  "Year:",   choices = years,  selected = max(years)),
+      selectInput("g2_state", "State:",  choices = states),
+      selectInput("g2_demo",  "Demographic:", choices = demos),
+      uiOutput("g2_focus_ui")
+    ),
+
+    mainPanel(
+      h3("Comparison Results"),
+      textOutput("g1_text"),
+      textOutput("g2_text"),
+      br(),
+      strong(textOutput("ratio_text")),
+      br(), br(),
+
+      h3("Smoking Prevalence by Race and Ethnicity"),
+      plotOutput("race_boxplot"),
+      br(), br(),
+
+      h4("Data Used (State-Level Averages)"),
+      tableOutput("summary_table")
+    )
+  )
+)
+
+# ---- SERVER ----
+server <- function(input, output, session) {
+
+  # helper: focus choices
+  focus_choices <- function(year, state, demo) {
+    tobacco_region %>%
+      filter(
+        Year == year,
+        State == state,
+        Demographic == demo
+      ) %>%
+      pull(`Comparing (Focus group)`) %>%
+      unique() %>%
+      sort()
+  }
+
+  output$g1_focus_ui <- renderUI({
+    selectInput(
+      "g1_focus", "Group 1: Focus group",
+      choices = focus_choices(input$g1_year, input$g1_state, input$g1_demo)
+    )
+  })
+
+  output$g2_focus_ui <- renderUI({
+    selectInput(
+      "g2_focus", "Group 2: Focus group",
+      choices = focus_choices(input$g2_year, input$g2_state, input$g2_demo)
+    )
+  })
+
+  # helper: prevalence
+  get_prev <- function(year, state, demo, focus) {
+    df <- tobacco_region %>%
+      filter(
+        Year == year,
+        State == state,
+        Demographic == demo,
+        `Comparing (Focus group)` == focus
+      )
+    if (nrow(df) == 0) return(NA_real_)
+    mean(df$`Cigarette Use Prevalence % (Focus group)`, na.rm = TRUE)
+  }
+
+  g1_prev <- reactive({
+    req(input$g1_year, input$g1_state, input$g1_demo, input$g1_focus)
+    get_prev(input$g1_year, input$g1_state, input$g1_demo, input$g1_focus)
+  })
+
+  g2_prev <- reactive({
+    req(input$g2_year, input$g2_state, input$g2_demo, input$g2_focus)
+    get_prev(input$g2_year, input$g2_state, input$g2_demo, input$g2_focus)
+  })
+
+  output$g1_text <- renderText({
+    p <- g1_prev()
+    if (is.na(p)) return("No data for Group 1.")
+    paste0(
+      "Group 1 (", input$g1_state, ", ", input$g1_year, ", ",
+      input$g1_demo, " = ", input$g1_focus,
+      ") has an estimated cigarette-use prevalence of ",
+      round(p, 1), "%."
+    )
+  })
+
+  output$g2_text <- renderText({
+    p <- g2_prev()
+    if (is.na(p)) return("No data for Group 2.")
+    paste0(
+      "Group 2 (", input$g2_state, ", ", input$g2_year, ", ",
+      input$g2_demo, " = ", input$g2_focus,
+      ") has an estimated cigarette-use prevalence of ",
+      round(p, 1), "%."
+    )
+  })
+
+  output$ratio_text <- renderText({
+    p1 <- g1_prev()
+    p2 <- g2_prev()
+    if (is.na(p1) || is.na(p2) || p2 == 0) {
+      return("Cannot compute disparity ratio.")
+    }
+    ratio <- p1 / p2
+    if (ratio > 1) {
+      paste0("Group 1 is ", round(ratio, 2),
+             "× more likely to smoke than Group 2.")
+    } else if (ratio < 1) {
+      paste0("Group 1 is ", round(1 / ratio, 2),
+             "× less likely to smoke than Group 2.")
+    } else {
+      "Both groups smoke at the same rate (ratio = 1.0)."
+    }
+  })
+
+  # race boxplot
+  output$race_boxplot <- renderPlot({
+    race_boxplot <- tobacco_region %>%
+      filter(Demographic == "Race and Ethnicity") %>%
+      select(
+        Race = `Comparing (Focus group)`,
+        Smoking = `Cigarette Use Prevalence % (Focus group)`
+      )
+
+    ggplot(race_boxplot,
+           aes(x = Race, y = Smoking, fill = Race)) +
+      geom_boxplot() +
+      labs(
+        title = "Distribution of Focus Group Smoking Prevalence by Race and Ethnicity",
+        x = "Race / Ethnicity",
+        y = "Cigarette Use Prevalence % (Focus group)",
+        fill = "Race / Ethnicity"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(axis.text.x = element_text(angle = 25, hjust = 1))
+  })
+
+  output$summary_table <- renderTable({
+    data.frame(
+      Group = c("Group 1", "Group 2"),
+      Year  = c(input$g1_year, input$g2_year),
+      State = c(input$g1_state, input$g2_state),
+      Demographic = c(input$g1_demo, input$g2_demo),
+      FocusGroup  = c(input$g1_focus, input$g2_focus),
+      Prevalence_percent = c(g1_prev(), g2_prev())
+    )
+  })
+}
+
+shinyApp(ui = ui, server = server)
+
+```
+
+
+
