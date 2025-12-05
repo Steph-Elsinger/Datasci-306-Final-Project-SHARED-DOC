@@ -166,9 +166,8 @@ tobacco_region |> filter(`Demographic` == "Income") |> group_by(`Comparing (Focu
          y = "Average Cigarette Smoking Rate (as a %)",
          fill = "Income")
 ```
-
 ```{r}
-# Convert smoking prevalence to numeric (as in your PDF)
+#Convert smoking prevalence to numeric (as in your PDF)
 m_health_numeric <- m_health %>%
   mutate(
     `Cigarette Use Prevalence % (Focus group)` =
@@ -195,8 +194,46 @@ ggplot(
   theme_minimal()
 ```
 ```{r}
-
+tobacco_region |>
+  filter(Demographic == "Employment") |>
+  ggplot(aes(
+    x = `Comparing (Focus group)`,
+    y = `Cigarette Use Prevalence % (Focus group)`,
+    fill = `Comparing (Focus group)`
+  )) +
+  geom_violin() +
+  labs(
+    title = "Distribution of Smoking Rates by Employment Status",
+    x = "Employment Status (Focus Group)",
+    y = "Cigarette Use Prevalence (%)", fill = "Employment Status"
+  ) +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
 ```
+
+
+```{r}
+tobacco |>
+  filter(`Comparing (Focus group)` == "Less than $20,000" &
+         `To (Reference group)` == "$75,000 or above") |>
+  group_by(Year) |>
+  summarize(avg_disp = mean(`Disparity Value`, na.rm = T)) |>
+  ggplot(aes(x = Year, y = avg_disp)) + geom_line()
+```
+
+```{r}
+tobacco_region |>
+  ungroup() |>
+  filter(Year == 2023) |>
+  select(Demographic, `Comparing (Focus group)`, `Disparity Value`) |>
+  group_by(Demographic, `Comparing (Focus group)`) |>
+  summarize(avg_disp = mean(`Disparity Value`, na.rm = T)) |>
+  filter(avg_disp > 1) |>
+  ggplot(aes(x = avg_disp,
+             y = reorder(`Comparing (Focus group)`, avg_disp),
+             fill = Demographic)) +
+  geom_col()
+```
+
 
 
 ### 3. Requirement - 3 (5 pt)
