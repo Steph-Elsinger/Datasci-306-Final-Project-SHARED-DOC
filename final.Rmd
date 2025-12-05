@@ -243,19 +243,7 @@ tobacco_region |>
     y = "Cigarette Use Prevalence (%)", fill = "Mental Health") +
   theme(axis.text.x = element_text(angle = 20, hjust = 1))
 ```
-```{r}
-tobacco_region |>
-  ungroup() |>
-  filter(Year == 2023) |>
-  select(Demographic, `Comparing (Focus group)`, `Disparity Value`) |>
-  group_by(Demographic, `Comparing (Focus group)`) |>
-  summarize(avg_disp = mean(`Disparity Value`, na.rm = T)) |>
-  filter(avg_disp > 1) |>
-  ggplot(aes(x = avg_disp,
-             y = reorder(`Comparing (Focus group)`, avg_disp),
-             fill = Demographic)) +
-  geom_col()
-```
+
 ```{r}
 race_boxplot <- tobacco_region |>
   filter(Demographic == "Race and Ethnicity") |>
