@@ -249,6 +249,38 @@ tobacco_region |>
     y = "Cigarette Use Prevalence (%)", fill = "Mental Health") +
   theme(axis.text.x = element_text(angle = 20, hjust = 1))
 ```
+```{r}
+tobacco_region |>
+  ungroup() |>
+  filter(Year == 2023) |>
+  select(Demographic, `Comparing (Focus group)`, `Disparity Value`) |>
+  group_by(Demographic, `Comparing (Focus group)`) |>
+  summarize(avg_disp = mean(`Disparity Value`, na.rm = T)) |>
+  filter(avg_disp > 1) |>
+  ggplot(aes(x = avg_disp,
+             y = reorder(`Comparing (Focus group)`, avg_disp),
+             fill = Demographic)) +
+  geom_col()
+```
+```{r}
+race_boxplot <- tobacco_region %>%
+  filter(Demographic == "Race and Ethnicity") %>%
+  select(Race = `Comparing (Focus group)`,
+         Smoking = `Cigarette Use Prevalence % (Focus group)`)
+
+ggplot(race_boxplot,
+       aes(x = Race, y = Smoking, fill = Race)) +
+  geom_boxplot() +
+  labs(
+    title = "Distribution of Focus Group Smoking Prevalence by Race and Ethnicity",
+    x = "Race / Ethnicity",
+    y = "Cigarette Use Prevalence % (Focus group)",
+    fill = "Race / Ethnicity"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+
+```
 
 
 ### 3. Requirement - 3 (5 pt)
