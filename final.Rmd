@@ -166,59 +166,30 @@ tobacco_region |> filter(`Demographic` == "Income") |> group_by(`Comparing (Focu
          y = "Average Cigarette Smoking Rate (as a %)",
          fill = "Income")
 ```
+
 ```{r}
-
-
-# --- Step 1: Convert to numeric ---
-m_health_numeric <- m_health %>%
-  mutate(across(c(`Cigarette Use Prevalence % (Focus group)`,
-                  `Cigarette Use Prevalence % (Reference group)`,
-                  `Disparity Value`),
-                as.numeric))
-
-income_numeric <- income %>%
-  mutate(across(c(`Cigarette Use Prevalence % (Focus group)`,
-                  `Cigarette Use Prevalence % (Reference group)`,
-                  `Disparity Value`),
-                as.numeric))
-
-# --- Step 2: Clean columns for merging ---
-m_health_clean <- m_health_numeric %>%
-  select(State, Year,
-         MentalHealth = `Comparing (Focus group)`,
-         MH_Smoking = `Cigarette Use Prevalence % (Focus group)`)
-
-income_clean <- income_numeric %>%
-  select(State, Year,
-         Income = `Comparing (Focus group)`,
-         Income_Smoking = `Cigarette Use Prevalence % (Focus group)`)
-
-# --- Step 3: Merge income + mental health by state and year ---
-merged <- income_clean %>%
-  inner_join(m_health_clean, by = c("State", "Year"))
-
-# --- Step 4: Compute the COMBINED average smoking prevalence ---
-plot_df <- merged %>%
-  mutate(CombinedSmoking = (Income_Smoking + MH_Smoking) / 2) %>%   # <--- KEY FIX
-  group_by(Income, MentalHealth) %>%
-  summarize(avg_combined = mean(CombinedSmoking, na.rm = TRUE),
-            .groups = "drop")
-
-# --- Step 5: Stacked bar chart ---
-ggplot(plot_df,
-       aes(x = Income,
-           y = avg_combined,
-           fill = MentalHealth)) +
-  geom_col(position = "dodge") +
-  labs(
-    title = "Combined Smoking Prevalence by Income (Stacked by Mental Health Category)",
-    x = "Income Bracket (Focus Group)",
-    y = "Avg Combined Cigarette Smoking Prevalence (%)",
-    fill = "Mental Health (Focus Group)"
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+tobacco |>
+  filter(`Comparing (Focus group)` == "Less than $20,000" &
+         `To (Reference group)` == "$75,000 or above") |>
+  group_by(Year) |>
+  summarize(avg_disp = mean(`Disparity Value`, na.rm = T)) |>
+  ggplot(aes(x = Year, y = avg_disp)) + geom_line()
 ```
+
+```{r}
+tobacco_region |>
+  ungroup() |>
+  filter(Year == 2023) |>
+  select(Demographic, `Comparing (Focus group)`, `Disparity Value`) |>
+  group_by(Demographic, `Comparing (Focus group)`) |>
+  summarize(avg_disp = mean(`Disparity Value`, na.rm = T)) |>
+  filter(avg_disp > 1) |>
+  ggplot(aes(x = avg_disp,
+             y = reorder(`Comparing (Focus group)`, avg_disp),
+             fill = Demographic)) +
+  geom_col()
+```
+
 
 
 ### 3. Requirement - 3 (5 pt)
@@ -226,14 +197,6 @@ ggplot(plot_df,
 By this phase, you have a pretty good understanding of your data. Now, you will develop a predictive Machine Learning model to forecast a specified target outcome. For predictor selection, you must apply the feature selection techniques covered in Lectures 19 and 20. Provide a detailed justification for the final set of predictors chosen to receive full credit.
 
 Build an interactive shiny app that allows the user to select or input values and then make predictions using your model. You are required to build the shiny app just for the prediction section of your project. Although we will accept if you create a shiny app for your entire project (not required)
-
-```{r}
-options(scipen = 999)
-model <- lm(`Cigarette Use Prevalence % (Focus group)` ~ Year + `Comparing (Focus group)` + region,
-            data = tobacco_region)
-
-summary(model)
-```
 
 
 ### 4. Requirement - 4 (1 pt)
