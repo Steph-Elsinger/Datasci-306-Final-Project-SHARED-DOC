@@ -1,6 +1,6 @@
 ---
 title: "DATASCI 306, Fall 2025, Final Group Project"
-author: "Group <num>: mention your group names here"
+author: "Group <num>: Andre Couwlier, Stephen Elsinger, Maximus Lo Bianco, Talia Parnes, Lucia Zhang"
 output:
   pdf_document: default
 ---
@@ -139,7 +139,7 @@ tobacco_region |>
   geom_bar(width = 1) +
   coord_polar(theta = "y") +
   facet_wrap(~ Year) +
-  labs(title = "Share of Top 100 Smoking Disparity Values by Factor (2010 vs 2023)",
+  labs(title = "Share of Top 100 Smoking Disparity Values by Factor (2011 vs 2023)",
       x = NULL, y = NULL,
       fill = "Factor") +
   theme_void()
@@ -201,6 +201,7 @@ ggplot(
 By this phase, you have a pretty good understanding of your data. Now, you will develop a predictive Machine Learning model to forecast a specified target outcome. For predictor selection, you must apply the feature selection techniques covered in Lectures 19 and 20. Provide a detailed justification for the final set of predictors chosen to receive full credit.
 
 Build an interactive shiny app that allows the user to select or input values and then make predictions using your model. You are required to build the shiny app just for the prediction section of your project. Although we will accept if you create a shiny app for your entire project (not required)
+
 
 ### 4. Requirement - 4 (1 pt)
 
