@@ -231,7 +231,10 @@ tobacco_region |>
   ggplot(aes(x = avg_disp,
              y = reorder(`Comparing (Focus group)`, avg_disp),
              fill = Demographic)) +
-  geom_col()
+  geom_col() + labs(title = "2023 Focus Groups that on Average were more likely to 
+                    smoke compared to their reference group",
+                    x = "Average Disparity",
+                     y = "Focus Group")
 ```
 
 ```{r}
