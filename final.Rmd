@@ -194,6 +194,9 @@ ggplot(
   ) +
   theme_minimal()
 ```
+```{r}
+
+```
 
 
 ### 3. Requirement - 3 (5 pt)
