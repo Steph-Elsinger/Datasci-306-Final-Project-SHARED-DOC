@@ -62,13 +62,6 @@ tobacco <- tobacco |>
 ```
 
 ```{r}
-tobacco <- tobacco |>
-  group_by(`Year`,
-           `State`,
-           `Demographic`,
-           `Comparing (Focus group)`,
-           `Cigarette Use Prevalence % (Focus group)`)|>
-  mutate(`Mean Disparity Value (Focus Group)` = mean(`Disparity Value`))
 
 # Creating a new column which assigns each state to a designated region based on the Census Regions and Divisions of the United States.
 
@@ -112,7 +105,8 @@ You need to plot 10 different diagrams to show correlations, frequencies, and/or
 
 tobacco_region |>
   filter(Year == 2022, Demographic == "Race and Ethnicity") |>
- 
+ # The year is 2022 because there was no data for people of the Asian group in 2023.
+  
   group_by(Race = `Comparing (Focus group)`, region) |>
   summarize(race_mean = mean(`Cigarette Use Prevalence % (Focus group)`, na.rm = TRUE)) |>
  
@@ -166,6 +160,7 @@ tobacco_region |> filter(`Demographic` == "Income") |> group_by(`Comparing (Focu
          y = "Average Cigarette Smoking Rate (as a %)",
          fill = "Income")
 ```
+
 ```{r}
 m_health_numeric <- m_health |>
   mutate(
@@ -183,6 +178,7 @@ ggplot(m_health_numeric,
     y = "Smoking Prevalence (%), Focus Group",
     color = "Mental Health Group") 
 ```
+
 ```{r}
 tobacco_region |>
   filter(Demographic == "Employment") |>
@@ -200,15 +196,16 @@ tobacco_region |>
   theme(axis.text.x = element_text(angle = 20, hjust = 1))
 ```
 
-
 ```{r}
 tobacco |>
   filter(`Comparing (Focus group)` == "Less than $20,000" &
          `To (Reference group)` == "$75,000 or above") |>
   group_by(Year) |>
   summarize(avg_disp = mean(`Disparity Value`, na.rm = T)) |>
-  ggplot(aes(x = Year, y = avg_disp)) + geom_line() + labs(title = "Average Disparity in smoking rates between low income 
-                                                           and high income individuals over time", y = "Average Disparity")
+  ggplot(aes(x = Year, y = avg_disp)) + geom_line() +
+  labs(title = "Average Disparity in Smoking Rates Between Low Income
+                and High Income Individuals Over Time",
+       y = "Average Disparity")
 ```
 
 ```{r}
@@ -222,8 +219,7 @@ tobacco_region |>
   ggplot(aes(x = avg_disp,
              y = reorder(`Comparing (Focus group)`, avg_disp),
              fill = Demographic)) +
-  geom_col() + labs(title = "2023 Focus Groups that on Average were more likely to 
-                    smoke compared to their reference group",
+  geom_col() + labs(title = "Focus Groups With Average Disparity Values Greater Than 1 in 2023",
                     x = "Average Disparity",
                      y = "Focus Group")
 ```
@@ -436,7 +432,8 @@ You should have a conclusion, highlighting the main insights you were able to de
 This is an open ended project where every team will come up with their own unique insights. We would like to see what each team comes up with.
 
 ```{r}
-##
+## 
+
 ```
 
 
