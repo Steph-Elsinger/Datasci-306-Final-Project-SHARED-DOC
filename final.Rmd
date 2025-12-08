@@ -132,9 +132,9 @@ tobacco_region |>
   geom_bar(width = 1) +
   coord_polar(theta = "y") +
   facet_wrap(~ Year) +
-  labs(title = "Share of Top 100 Smoking Disparity Values by Factor (2011 vs 2023)",
+  labs(title = "Share of Top 100 Smoking Disparity Values by Focus Group (2011 vs 2023)",
       x = NULL, y = NULL,
-      fill = "Factor") +
+      fill = "Focus Group") +
   theme_void()
 ```
 
@@ -219,6 +219,21 @@ tobacco_region |>
              y = reorder(`Comparing (Focus group)`, avg_disp),
              fill = Demographic)) +
   geom_col() + labs(title = "Focus Groups With Average Disparity Values Greater Than 1 in 2023",
+                    x = "Average Disparity",
+                     y = "Focus Group")
+```
+```{r}
+tobacco_region |>
+  ungroup() |>
+  filter(Year == 2023) |>
+  select(Demographic, `Comparing (Focus group)`, `Disparity Value`) |>
+  group_by(Demographic, `Comparing (Focus group)`) |>
+  summarize(avg_disp = mean(`Disparity Value`, na.rm = T)) |>
+  filter(avg_disp < 1) |>
+  ggplot(aes(x = avg_disp,
+             y = reorder(`Comparing (Focus group)`, -avg_disp),
+             fill = Demographic)) +
+  geom_col() + labs(title = "Focus Groups With Average Disparity Values Less Than 1 in 2023",
                     x = "Average Disparity",
                      y = "Focus Group")
 ```
