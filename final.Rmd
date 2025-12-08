@@ -1,6 +1,6 @@
 ---
 title: "DATASCI 306, Fall 2025, Final Group Project"
-author: "Group <num>: Andre Couwlier, Stephen Elsinger, Maximus Lo Bianco, Talia Parnes, Lucia Zhang"
+author: "Group 34: Andre Couwlier, Stephen Elsinger, Maximus Lo Bianco, Talia Parnes, Lucia Zhang"
 output:
   pdf_document: default
 ---
@@ -291,7 +291,7 @@ library(shiny)
 library(dplyr)
 library(ggplot2)
 
-# ---- Clean up column names ----
+# ---- Clean up column names to make more coder friendly ----
 tobacco_clean <- tobacco_region %>%
   rename(
     cig_prev    = `Cigarette Use Prevalence % (Focus group)`,
@@ -301,13 +301,13 @@ tobacco_clean <- tobacco_region %>%
 regions      <- sort(unique(tobacco_clean$region))
 focus_groups <- sort(unique(tobacco_clean$focus_group))
 
-# ---- Fit linear model ----
+# ---- linear model ----
 model <- lm(
   cig_prev ~ Year + region + focus_group,
   data = tobacco_clean
 )
 
-# Helper function
+# Helper function For Later
 predict_prev <- function(year, region, focus) {
   newdata <- data.frame(
     Year        = year,
@@ -326,14 +326,14 @@ ui <- fluidPage(
       h3("Group A"),
       selectInput("region_A", "Region", choices = regions),
       selectInput("focus_A", "Focus Group", choices = focus_groups),
-      numericInput("year_A", "Year", value = 2026, min = 2023),
+      numericInput("year_A", "Year", value = 2030, min = 2023),
       
       hr(),
       
       h3("Group B"),
       selectInput("region_B", "Region", choices = regions),
       selectInput("focus_B", "Focus Group", choices = focus_groups),
-      numericInput("year_B", "Year", value = 2026, min = 2023)
+      numericInput("year_B", "Year", value = 2030, min = 2023)
     ),
     
     mainPanel(
@@ -371,7 +371,7 @@ server <- function(input, output, session) {
     paste("Predicted Prevalence for Group B:", round(predB, 2), "%")
   })
   
-  # ----- NEW ratio text (raw numeric ratio, clean wording) -----
+  # ----- Ratio & interpretation -----
   output$disparitySentence <- renderText({
     predA <- predict_prev(input$year_A, input$region_A, input$focus_A)
     predB <- predict_prev(input$year_B, input$region_B, input$focus_B)
@@ -385,7 +385,7 @@ server <- function(input, output, session) {
     
     ratio <- predA / predB
     
-    # Treat near-equal as equal
+
     if (abs(ratio - 1) < 0.02) {
       return("Group A and Group B are approximately equally likely to smoke.")
     }
@@ -405,28 +405,19 @@ server <- function(input, output, session) {
   
   # ---- Region trend graph ----
   output$regionTrendPlot <- renderPlot({
-    tobacco_clean %>%
-      group_by(Year, region) %>%
-      summarize(
-        avg = mean(cig_prev, na.rm = TRUE),
-        .groups = "drop"
-      ) %>%
-      ggplot(aes(x = Year, y = avg, color = region)) +
-      geom_line(size = 1.2) +
-      labs(
-        title = "Average Smoking Rate Over Time by Region",
-        y = "Average Cigarette Smoking Rate (%)",
-        x = "Year",
-        color = "Region"
-      ) +
-      theme_minimal(base_size = 14)
+    tobacco_region |> group_by(`Year`, region) |> 
+  summarize(avg = mean(`Cigarette Use Prevalence % (Focus group)`, na.rm = T)) |>
+  
+  ggplot() + geom_line(aes(x = `Year`, 
+                           y = avg, color = region)) +
+    labs(title = "Average Smoking Rate Over Time by Focus Group's Region",
+         y = "Average Cigarette Smoking Rate (as a %)",
+         color = "Region")
   })
 }
 
 # ---- Run App ----
 shinyApp(ui, server)
-
-
 ```
 
 
@@ -435,17 +426,18 @@ shinyApp(ui, server)
 ```{r}
 model <- lm(cig_prev ~ Year + region + focus_group, data = tobacco_clean)
 
-
 summary(model)
 ## In reviewing the regression output, all predictors used in the model were statistically significant at the 0.05 level with the exception of the Age 18–24 focus-group category, which had a p-value of 0.23. This lack of significance does not indicate a problem with the model. Because Age is included as part of a larger categorical predictor (the broader Focus Group variable), it is normal for some individual categories to be non-significant relative to the baseline. The Age 18–24 group simply does not differ statistically from the reference group, while the other age categories (25–44, 45–64, 65+) show strong significance. The variable as a whole still contributes meaningful explanatory power to the model, so the presence of one non-significant category does not warrant removing the predictor or modifying the model structure.
 ```
 
+```{r}
+state_signif<-lm(
+  cig_prev ~ Year + State + focus_group,
+  data = tobacco_clean
+)
+summary(state_signif)
 
-
-
-
-
-
+```
 
 ### 4. Requirement - 4 (1 pt)
 
@@ -454,12 +446,40 @@ You should have a conclusion, highlighting the main insights you were able to de
 This is an open ended project where every team will come up with their own unique insights. We would like to see what each team comes up with.
 
 ```{r}
-## 
+cat("
+# Requirement 4: Conclusion and Main Insights
 
+## Key Insights From Our Analysis
+
+- **Smoking disparities exist across all demographics**
+    - Non-Hispanic AIAN groups smoke the most
+    - Non-Hispanic Asian groups smoke the least
+    - Lower-income groups and those unable to work show the highest rates
+
+- **Mental health strongly influences smoking**
+    - Severe mental distress is associated with much higher
+      and more variable smoking rates
+
+- **Regional patterns persist**
+    - Midwest and South maintain the highest rates despite declines
+
+- **Smoking has decreased over time**
+    - Gaps between demographic groups remain
+
+- **Most at-risk groups include:**
+    - Unable to work
+    - Income < $20,000
+    - Non-Hispanic AIAN
+    - Unemployed
+
+- **Least at-risk groups include:**
+    - Income > $75,000
+    - Homemakers or students
+    - Non-Hispanic Asian individuals
+- **Demographic information influences tobacco use probability
+    more than regional information.**
+")
 ```
-
-
-
 
 
 ## Submission
@@ -497,8 +517,5 @@ Your summary might answer questions like;
 * What were the most significant trends and predictors of smoking disparity? 
 * Which populations should be prioritized for smoking cessation programs? etc.  
 You may also include ideas for future analysis and any limitations you came across with the current dataset
-
-
-
 
 
