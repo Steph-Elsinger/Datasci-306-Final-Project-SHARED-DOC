@@ -101,7 +101,63 @@ tobacco_region |>
 
 You need to plot 10 different diagrams to show correlations, frequencies, and/or relationships between various variables with plots of 5 different types (bar, line, heatmap, facet, etc.). Every plot should have a title and the x/y axis should have legible labels without any label overlaps for full credit. Provide a summary of your interpretations from the plots after each one. Each chart should be meaningful by itself.
 ```{r}
+#Graph 1
+tobacco_region |> group_by(`Year`, region) |> 
+  summarize(avg = mean(`Cigarette Use Prevalence % (Focus group)`, na.rm = T)) |>
+  
+  ggplot() + geom_line(aes(x = `Year`, 
+                           y = avg, color = region)) +
+    labs(title = "Average Smoking Rate Over Time by Focus Group's Region",
+         y = "Average Cigarette Smoking Rate (as a %)",
+         color = "Region")
+```
 
+```{r}
+#Graph 2
+tobacco |>
+  filter(`Comparing (Focus group)` == "Less than $20,000" &
+         `To (Reference group)` == "$75,000 or above") |>
+  group_by(Year) |>
+  summarize(avg_disp = mean(`Disparity Value`, na.rm = T)) |>
+  ggplot(aes(x = Year, y = avg_disp)) + geom_line() +
+  labs(title = "Average Disparity in Smoking Rates Between Low Income
+                and High Income Individuals Over Time",
+       y = "Average Disparity")
+```
+
+```{r}
+#Graph 3
+m_health_numeric <- m_health |>
+  mutate(
+    `Cigarette Use Prevalence % (Focus group)` =
+      as.numeric(`Cigarette Use Prevalence % (Focus group)`)
+  )
+ggplot(m_health_numeric,
+  aes(x = Year,
+    y = `Cigarette Use Prevalence % (Focus group)`,
+    color = `Comparing (Focus group)`)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(se = FALSE) + 
+  labs(title = "Smoking Prevalence Over Time by Mental Health Group",
+    x = "Year",
+    y = "Smoking Prevalence (%), Focus Group",
+    color = "Mental Health Group")
+```
+
+```{r}
+#Graph 4
+tobacco_region |> filter(`Demographic` == "Income") |> group_by(`Comparing (Focus group)`, `region`) |>
+  summarize(avg = mean(`Cigarette Use Prevalence % (Focus group)`, na.rm = T)) |>
+  
+  ggplot(aes(fill = `Comparing (Focus group)`, y = avg, x = region)) + geom_col(position = "dodge") +
+    labs(title = "Average Smoking Rate by Focus Group's Income and Region",
+         x = "Region",
+         y = "Average Cigarette Smoking Rate (as a %)",
+         fill = "Income")
+```
+
+```{r}
+#Graph 5
 tobacco_region |>
   filter(Year == 2022, Demographic == "Race and Ethnicity") |>
  # The year is 2022 because there was no data for people of the Asian group in 2023.
@@ -112,11 +168,61 @@ tobacco_region |>
   ggplot(aes(x = region, y = race_mean, fill = Race)) + geom_col(position = "dodge") +
   labs(title = "Average US Adult Smoking Rates by Race and Region in 2022",
        x = "Region", y = "Average Smoking Rate (%)", fill = "Race")
-
 ```
 
 ```{r}
+#Graph 6
+tobacco_region |>
+  filter(Demographic == "Mental Health") |>
+  ggplot(aes(
+    x = `Comparing (Focus group)`,
+    y = `Cigarette Use Prevalence % (Focus group)`,
+    fill = `Comparing (Focus group)`
+  )) +
+  geom_boxplot() +
+  labs(
+    title = "Smoking Rates by Mental Health Status",
+    x = "Mental Health Category",
+    y = "Cigarette Use Prevalence (%)", fill = "Mental Health") +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+```
 
+```{r}
+#Graph 7
+race_boxplot <- tobacco_region |>
+  filter(Demographic == "Race and Ethnicity") |>
+  select(Race = `Comparing (Focus group)`,
+         Smoking = `Cigarette Use Prevalence % (Focus group)`)
+ggplot(race_boxplot,
+       aes(x = Race, y = Smoking, fill = Race)) +
+  geom_boxplot() +
+  labs(title = "Distribution of Focus Group Smoking Prevalence by Race and Ethnicity",
+    x = "Race / Ethnicity",
+    y = "Cigarette Use Prevalence % (Focus group)",
+    fill = "Race / Ethnicity") +
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+```
+
+```{r}
+#Graph 8
+tobacco_region |>
+  filter(Demographic == "Employment") |>
+  ggplot(aes(
+    x = `Comparing (Focus group)`,
+    y = `Cigarette Use Prevalence % (Focus group)`,
+    fill = `Comparing (Focus group)`
+  )) +
+  geom_violin() +
+  labs(
+    title = "Distribution of Smoking Rates by Employment Status",
+    x = "Employment Status (Focus Group)",
+    y = "Cigarette Use Prevalence (%)", fill = "Employment Status"
+  ) +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+```
+
+```{r}
+#Graph 9
 tobacco_region |>
   ungroup() |>
   filter(Year %in% c(2011, 2023)) |>
@@ -139,75 +245,7 @@ tobacco_region |>
 ```
 
 ```{r}
-tobacco_region |> group_by(`Year`, region) |> 
-  summarize(avg = mean(`Cigarette Use Prevalence % (Focus group)`, na.rm = T)) |>
-  
-  ggplot() + geom_line(aes(x = `Year`, 
-                           y = avg, color = region)) +
-    labs(title = "Average Smoking Rate Over Time by Focus Group's Region",
-         y = "Average Cigarette Smoking Rate (as a %)",
-         color = "Region")
-```
-
-```{r}
-tobacco_region |> filter(`Demographic` == "Income") |> group_by(`Comparing (Focus group)`, `region`) |>
-  summarize(avg = mean(`Cigarette Use Prevalence % (Focus group)`, na.rm = T)) |>
-  
-  ggplot(aes(fill = `Comparing (Focus group)`, y = avg, x = region)) + geom_col(position = "dodge") +
-    labs(title = "Average Smoking Rate by Focus Group's Income and Region",
-         x = "Region",
-         y = "Average Cigarette Smoking Rate (as a %)",
-         fill = "Income")
-```
-
-```{r}
-m_health_numeric <- m_health |>
-  mutate(
-    `Cigarette Use Prevalence % (Focus group)` =
-      as.numeric(`Cigarette Use Prevalence % (Focus group)`)
-  )
-ggplot(m_health_numeric,
-  aes(x = Year,
-    y = `Cigarette Use Prevalence % (Focus group)`,
-    color = `Comparing (Focus group)`)) +
-  geom_point(alpha = 0.2) +
-  geom_smooth(se = FALSE) + 
-  labs(title = "Smoking Prevalence Over Time by Mental Health Group",
-    x = "Year",
-    y = "Smoking Prevalence (%), Focus Group",
-    color = "Mental Health Group") 
-```
-
-```{r}
-tobacco_region |>
-  filter(Demographic == "Employment") |>
-  ggplot(aes(
-    x = `Comparing (Focus group)`,
-    y = `Cigarette Use Prevalence % (Focus group)`,
-    fill = `Comparing (Focus group)`
-  )) +
-  geom_violin() +
-  labs(
-    title = "Distribution of Smoking Rates by Employment Status",
-    x = "Employment Status (Focus Group)",
-    y = "Cigarette Use Prevalence (%)", fill = "Employment Status"
-  ) +
-  theme(axis.text.x = element_text(angle = 20, hjust = 1))
-```
-
-```{r}
-tobacco |>
-  filter(`Comparing (Focus group)` == "Less than $20,000" &
-         `To (Reference group)` == "$75,000 or above") |>
-  group_by(Year) |>
-  summarize(avg_disp = mean(`Disparity Value`, na.rm = T)) |>
-  ggplot(aes(x = Year, y = avg_disp)) + geom_line() +
-  labs(title = "Average Disparity in Smoking Rates Between Low Income
-                and High Income Individuals Over Time",
-       y = "Average Disparity")
-```
-
-```{r}
+#Graph 10A
 tobacco_region |>
   ungroup() |>
   filter(Year == 2023) |>
@@ -222,7 +260,9 @@ tobacco_region |>
                     x = "Average Disparity",
                      y = "Focus Group")
 ```
+
 ```{r}
+#Graph 10B
 tobacco_region |>
   ungroup() |>
   filter(Year == 2023) |>
@@ -236,38 +276,6 @@ tobacco_region |>
   geom_col() + labs(title = "Focus Groups With Average Disparity Values Less Than 1 in 2023",
                     x = "Average Disparity",
                      y = "Focus Group")
-```
-
-```{r}
-tobacco_region |>
-  filter(Demographic == "Mental Health") |>
-  ggplot(aes(
-    x = `Comparing (Focus group)`,
-    y = `Cigarette Use Prevalence % (Focus group)`,
-    fill = `Comparing (Focus group)`
-  )) +
-  geom_boxplot() +
-  labs(
-    title = "Smoking Rates by Mental Health Status",
-    x = "Mental Health Category",
-    y = "Cigarette Use Prevalence (%)", fill = "Mental Health") +
-  theme(axis.text.x = element_text(angle = 20, hjust = 1))
-```
-
-```{r}
-race_boxplot <- tobacco_region |>
-  filter(Demographic == "Race and Ethnicity") |>
-  select(Race = `Comparing (Focus group)`,
-         Smoking = `Cigarette Use Prevalence % (Focus group)`)
-ggplot(race_boxplot,
-       aes(x = Race, y = Smoking, fill = Race)) +
-  geom_boxplot() +
-  labs(title = "Distribution of Focus Group Smoking Prevalence by Race and Ethnicity",
-    x = "Race / Ethnicity",
-    y = "Cigarette Use Prevalence % (Focus group)",
-    fill = "Race / Ethnicity") +
-  theme(axis.text.x = element_text(angle = 25, hjust = 1))
-
 ```
 
 
